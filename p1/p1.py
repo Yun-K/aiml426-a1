@@ -66,6 +66,25 @@ class Knapsack:
 # - Compare the results with the optimal values, and make discussions. 
 # - Draw the convergence curve of the GA for each instance (x-axis being the number of generations, y-axis the average fitness of the 5 best solutions in the population of the xth generation from the 5 runs). Make discussions about the convergence curve and draw your conclusions.
 
+# %% [markdown]
+# First, define some hyper parameters for the GA.
+
+# %%
+
+# define some constants for the genetic algorithm
+CONSTANTS_DICT = {
+    "POPULATION_SIZE": 100, # number of individuals in each population
+    "MAX_GENERATIONS": 250, # number of generations to run the algorithm
+    "CROSSOVER_RATE": 1.0, # crossover rate should always be 100%, based on slides
+    "MUTATION_RATE": 0.2, # mutation rate
+    "ELITIST_PERCENTAGE": 0.05, # percentage of the best individuals to keep in the next generation
+    
+}
+
+
+# %% [markdown]
+# Then, use the creator to define the type of the individual and fitness classes
+
 # %%
 from asyncio import constants
 from json import tool
@@ -87,16 +106,15 @@ import operator
 # 1 for maximize value, -1 for minimize weight, 
 # creator.create("FitnessCompound", base.Fitness, weights=(1.0,-1.0)) 
 
-# according to slide, fitness value has been reduced to 1 dimension, so just use FitnessMax
+# according to the evaluation function from the slide, 
+# fitness value has been reduced to 1 dimension, so just use FitnessMax
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 # Individual should be a list of binary values, i.e. a list of 0s and 1s
 creator.create("Individual", list, fitness=creator.FitnessMax)
 
 
 # %%
-def evaluateFunction(ds:Knapsack,individual:creator.Individual,  
-                     penality_coef:float=666#math.inf
-                     ): 
+def evaluateFunction(ds: Knapsack, individual: creator.Individual, penality_coef: float):
     """fitness evaluation function for the knapsack problem.
     It is inspired by the slide and this paper
     :https://www.dataminingapps.com/2017/03/solving-the-knapsack-problem-with-a-simple-genetic-algorithm/ 
@@ -104,7 +122,7 @@ def evaluateFunction(ds:Knapsack,individual:creator.Individual,
     Args:
         ds (Knapsack): for calculating value and weight
         individual (creator.Individual): a list of binary values, i.e. a list of 0s and 1s
-        penality_coef (float, optional): 
+        penality_coef (float): 
                         Very large value: always ignore infeasible solutions 
                         Zero: only consider quality (bad choice, will get 1111....1) 
                         Somewhere in between, parameter tuning, or adaptively change 𝛼
@@ -113,21 +131,23 @@ def evaluateFunction(ds:Knapsack,individual:creator.Individual,
         tuple: the fitness of the individual
     """
     value, weight = 0.0, 0.0
+    # calculate the value and weight of selected items for the given individual
     for i in range(len(individual)):
         value += ds.items.iloc[i]['Value'] * individual[i]
         weight += ds.items.iloc[i]['Weight'] * individual[i]
-    # all_item_weight = ds.items['Weight'].sum()
-    # penalty = abs(weight - ds.capacity) * all_item_weight
     penalty = penality_coef*max(0, weight - ds.capacity)
     fitnessVal = value-penalty
-    
+
     return fitnessVal,
 
+    # all_item_weight = ds.items['Weight'].sum()
+    # penalty = abs(weight - ds.capacity) * all_item_weight
     # if weight > ds.capacity:
     #     return -math.inf, math.inf # ensure overweighted bags are dominated
-    # return value, weight 
+    # return value, weight
 
-def calculate_weight_values(ds:Knapsack, individual:creator.Individual):
+
+def get_weight_value_attrs_for_given_individual(ds: Knapsack, individual: creator.Individual):
     """For recording statistics of the individual in order to plot the graph and print the statistics for each generation
 
     Args:
@@ -137,24 +157,12 @@ def calculate_weight_values(ds:Knapsack, individual:creator.Individual):
     Returns:
         dict: for logbook to record the statistics of the individual
     """
-    value, weight = 0.0,0.0
+    value, weight = 0.0, 0.0
     for i in range(len(individual)):
         value += ds.items.iloc[i]['Value'] * individual[i]
         weight += ds.items.iloc[i]['Weight'] * individual[i]
     # print(f"Individual: {individual}\nTotal value: {value} \n Total weight: {weight}")
-    return {"best_ind_value":value, "best_ind_weight":weight, "best_ind_chromosome":individual}
-
-# %%
-
-# define some constants for the genetic algorithm
-CONSTANTS_DICT = {
-    "POPULATION_SIZE": 100, # number of individuals in each population
-    "MAX_GENERATIONS": 250, # number of generations to run the algorithm
-    "CROSSOVER_RATE": 1.0, # crossover rate should always be 100%, based on slides
-    "MUTATION_RATE": 0.1, # mutation rate
-    "ELITIST_PERCENTAGE": 0.05, # percentage of the best individuals to keep in the next generation
-    
-}
+    return {"best_ind_value": value, "best_ind_weight": weight, "best_ind_chromosome": individual}
 
 
 # %%
@@ -165,8 +173,14 @@ def setup_toolbox(ds:Knapsack,randSeed:int=12) -> base.Toolbox:
     toolbox = base.Toolbox()
     # for population size, we use the random.randint function to generate a random integer in the range [min, max]
     random.seed(randSeed)
-    toolbox.register("attr_bool", random.randint, 0, 1) # register a method to generate random boolean values
-    toolbox.register("IndividualCreator", tools.initRepeat, creator.Individual, toolbox.attr_bool, n=len(ds.items)) # register a method to generate random individuals
+    # register a method to generate random boolean values
+    toolbox.register("attr_bool", random.randint, 0, 1)
+    # register a method to generate random individuals
+    toolbox.register("IndividualCreator", 
+                     tools.initRepeat, 
+                     creator.Individual, 
+                     toolbox.attr_bool, 
+                     n=len(ds.items)) 
     
     # N is not specificied, so need to specify number of individuals to generate within each population when we call it later
     toolbox.register("PopulationCreator", tools.initRepeat, list, toolbox.IndividualCreator) 
@@ -175,7 +189,7 @@ def setup_toolbox(ds:Knapsack,randSeed:int=12) -> base.Toolbox:
     toolbox.register("elitism", tools.selBest, k=int(CONSTANTS_DICT["ELITIST_PERCENTAGE"]*ds.M))
     toolbox.register("select", tools.selTournament, k=2, tournsize=3)
     
-    toolbox.register("mate", tools.cxOnePoint) # TODO: might need to change this to cxOnePoint
+    toolbox.register("mate", tools.cxTwoPoint) # TODO: might need to change this to cxOnePoint
     # indpb refer to the probability of mutate happening on each gene, it is NOT the same as mutation rate
     toolbox.register("mutate", tools.mutFlipBit, indpb=1.0/ds.M) # TODO: might need to change this to mutUniformInt
     # local search operator
@@ -224,7 +238,7 @@ def run_GA_framework(ds:Knapsack, max_gen= CONSTANTS_DICT["MAX_GENERATIONS"] ,ra
         # compute the number of feasible individuals in the population
         feasible_count = 0
         for ind in pop:
-            weight = calculate_weight_values(ds,ind)['best_ind_weight']
+            weight = get_weight_value_attrs_for_given_individual(ds,ind)['best_ind_weight']
             if weight <= ds.capacity:
                 feasible_count += 1
         # compute the percentage of feasible individuals in the population
@@ -234,12 +248,11 @@ def run_GA_framework(ds:Knapsack, max_gen= CONSTANTS_DICT["MAX_GENERATIONS"] ,ra
         return penalty_coefficient_const * (1 - feasible_percentage)
 
         
-    def evaluate_fitness_values(pop, penalty_coefficient_const = 666) -> None:
-        """Update the fitness values of the individuals in the population
-        """
+    def evaluate_fitness_values(pop, penalty_coefficient_const = 666, feasiible_percenttage_threshold=0.5) -> None:
+        """Update the fitness values of each individual for the given the population"""
         penalty_coefficient = calculate_penalty_coefficients(pop,
-                                                             penalty_coefficient_const = penalty_coefficient_const,
-                                                             feasiible_percenttage_threshold = 0.5)
+                                                                penalty_coefficient_const,
+                                                                feasiible_percenttage_threshold)
         for ind in pop:
             ind.fitness.values = toolbox.evaluate(ind,penalty_coefficient)
 
@@ -264,7 +277,7 @@ def run_GA_framework(ds:Knapsack, max_gen= CONSTANTS_DICT["MAX_GENERATIONS"] ,ra
         best_5_avg_fitness = np.mean([ind.fitness.values[0] for ind in best_5_individuals])
         # 
         best_feasible_individual =  best_5_individuals[0]
-        best_attr = calculate_weight_values(ds,best_feasible_individual)
+        best_attr = get_weight_value_attrs_for_given_individual(ds,best_feasible_individual)
 
         
         # record the statistics of the current generation
@@ -349,9 +362,9 @@ def run_5_times_with_different_seeds(ds:Knapsack, title:str, max_gen=CONSTANTS_D
         print('-'*80)
         print("Running GA with seed: ", randSeed[i])
         print('Best fitness: ', best_feasible_individual.fitness.values[0])
-        print('Best value: ', calculate_weight_values(ds,best_feasible_individual)["best_ind_value"])
-        print('Best weight: ', calculate_weight_values(ds,best_feasible_individual)["best_ind_weight"])
-        print('Best chromosome: ', calculate_weight_values(ds,best_feasible_individual)["best_ind_chromosome"])
+        print('Best value: ', get_weight_value_attrs_for_given_individual(ds,best_feasible_individual)["best_ind_value"])
+        print('Best weight: ', get_weight_value_attrs_for_given_individual(ds,best_feasible_individual)["best_ind_weight"])
+        print('Best chromosome: ', get_weight_value_attrs_for_given_individual(ds,best_feasible_individual)["best_ind_chromosome"])
         print("FOllowing are the statistics for each generation with the seed: ", randSeed[i])
         print('-'*80)
         logbook.header = "gen", "avg", "std", "min", "max", "best_ind_value", "best_ind_weight", "best_5_avg_fitness","best_ind_chromosome"
@@ -399,11 +412,11 @@ def run_5_times_with_different_seeds(ds:Knapsack, title:str, max_gen=CONSTANTS_D
     
     # print out best individual from each run
     for i in range(len(best_individual_list)):
-        print(f"Best individual for seed {str(randSeed[i])}:\
+        print(f"\nBest individual for seed {str(randSeed[i])}:\
               \n\t {best_individual_list[i]}\
               \n\t Fitness: {best_individual_list[i].fitness.values[0]}\
-              \n\t Value: {calculate_weight_values(ds,best_individual_list[i])['best_ind_value']}\
-              \n\t Weight: {calculate_weight_values(ds,best_individual_list[i])['best_ind_weight']}")
+              \n\t Value: {get_weight_value_attrs_for_given_individual(ds,best_individual_list[i])['best_ind_value']}\
+              \n\t Weight: {get_weight_value_attrs_for_given_individual(ds,best_individual_list[i])['best_ind_weight']}")
 
 # %% [markdown]
 # run each dataset individually with 5 different seed
@@ -414,7 +427,7 @@ def run_5_times_with_different_seeds(ds:Knapsack, title:str, max_gen=CONSTANTS_D
 
 # %%
 ds_10_269 = Knapsack.constructFromFile('10_269')
-run_5_times_with_different_seeds(ds_10_269,title="10_269",max_gen=100)
+run_5_times_with_different_seeds(ds_10_269,title="10_269",max_gen=30)
 
 # %% [markdown]
 # run each dataset individually with 5 different seed
@@ -425,7 +438,7 @@ run_5_times_with_different_seeds(ds_10_269,title="10_269",max_gen=100)
 
 # %%
 ds_23_10000 = Knapsack.constructFromFile("23_10000")
-run_5_times_with_different_seeds(ds_23_10000,title="23_10000")
+run_5_times_with_different_seeds(ds_23_10000,title="23_10000",max_gen=200)
 
 # %% [markdown]
 # run each dataset individually with 5 different seed
@@ -437,7 +450,7 @@ run_5_times_with_different_seeds(ds_23_10000,title="23_10000")
 # %%
 # assert not True
 ds_100_995 = Knapsack.constructFromFile("100_995")
-run_5_times_with_different_seeds(ds_100_995,title="100_995",max_gen=250)
+run_5_times_with_different_seeds(ds_100_995,title="100_995",max_gen=300)
 
 
 # %%

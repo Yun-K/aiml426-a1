@@ -10,6 +10,8 @@ For part 3, the p3.ipynb can be found via `p3/p3.ipynb`, which is under the `p3`
 
 
 In addition, I have also transformed all *.ipynb to *.py files as well, so you can run my programms using the command line as well. 
+`However, it is worth to mention that it is time consuming to run each part via commands, such as only run the part 1 will cost you about an hour, so I suggest you to just look at the jupyter notebooks, which is *.ipynb since it is intuitive.`
+
 Below are the steps and commands to run my programs:
 
 First, u need to unzip the program.zip and `cd` to the program directory, 
@@ -17,7 +19,6 @@ First, u need to unzip the program.zip and `cd` to the program directory,
 
 then, rest of this readme.txt contains commands to run the *.py for each part, you can just copy and paste in the terminal.
 
-`Also, it is worth to mention that it is time consuming to run via commands, I suggest you to just look at the *.ipynb since it is intuitive.`
 
 Part 1: 
     > cd p1 && python p1.py && cd ..
