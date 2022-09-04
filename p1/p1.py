@@ -21,7 +21,7 @@ class Knapsack:
     '''
     # main constructor 
     def __init__(self, M, capacity, items):
-        '''N is the number of items, i.e. len(items)'''
+        '''M is the number of items, i.e. len(items)'''
         self.M = M
         self.capacity = capacity
         self.items = items
@@ -354,6 +354,7 @@ def run_5_times_with_different_seeds(ds:Knapsack, title:str, max_gen=CONSTANTS_D
     Run the GA framework 5 times with different seeds
     '''
     best_5_avg_fitness_list, best_individual_list = [],[]
+    
     gen = None
     for i in range(run_times):
         best_feasible_individual,logbook,stats = run_GA_framework(ds,max_gen,randSeed[i])
@@ -375,7 +376,18 @@ def run_5_times_with_different_seeds(ds:Knapsack, title:str, max_gen=CONSTANTS_D
         print('-'*80)
         print('-'*80)
         print('-'*80)
+        # plot the mean and std for each run
+        plt.plot(gen, logbook.select("avg"),  label=f"Seed:{str(randSeed[i])}\nAverage(Mean) Fitness")
+        plt.plot(gen, logbook.select("std"),  label=f"Seed:{str(randSeed[i])}\nStd Fitness")
+        plt.legend(bbox_to_anchor =(1.3,-0.1), loc='lower center')
+        # plt.legend(loc="lower left")
+        plt.ylabel("Mean / std for all individuals")
+        plt.xlabel("Generation")
+        plt.title(f"dataset: {title}")
+    plt.yscale('symlog') 
+    plt.show()
     
+    # plot the mean of the 5 best solutions   
     for i in range(run_times):
         plt.plot(gen, best_5_avg_fitness_list[i], label=f"Seed: {str(randSeed[i])}")
         plt.legend(loc="lower right")
