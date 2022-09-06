@@ -68,29 +68,31 @@ class DatasetPart2:
         return np.mean(n_scores)
 
     
-    def __init__(self,df):
-        self.df=df
-        self.x = self.df.iloc[:,:-1]
-        self.y = self.df.iloc[:,-1]
-        self.M = self.df.shape[0]  # number of rows
-        
-
     @classmethod
     def constructFromFile(cls,filePath):
         df = pd.read_csv(filePath,header=None)
         df.columns = [f"f_{i}" for i in range(len(df.columns))]
         df.rename(columns = {f'f_{len(df.columns)-1}':'class'}, inplace = True)
         return cls(df) 
+
+    def __init__(self,df):
+        self.df=df
+        self.x = self.df.iloc[:,:-1]
+        self.y = self.df.iloc[:,-1]
+        self.M = self.df.shape[0]  # number of rows
+        # for avoiding FS bias
+        self.df_fs = self.df.sample(frac=0.7, random_state=1)
     
     def getDfWithSelectedFeatures(self, selectedFeatures:list):
+        """For avoiding FS bias, df_fs is used instead of df to obtain the selected features"""
         returnedDf = pd.DataFrame()
         for i in range(len(selectedFeatures)):
             isSelected = True if selectedFeatures[i] == 1 else False
             if isSelected:
                 # concat this feature to the returned dataframe
-                returnedDf = pd.concat([returnedDf,self.df.iloc[:,i]],axis=1)
+                returnedDf = pd.concat([returnedDf,self.df_fs.iloc[:,i]],axis=1)
         # concat the class column
-        returnedDf = pd.concat([returnedDf,self.df.iloc[:,-1]],axis=1)
+        returnedDf = pd.concat([returnedDf,self.df_fs.iloc[:,-1]],axis=1)
         return returnedDf
     
     @staticmethod
