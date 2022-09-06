@@ -68,20 +68,15 @@ class DatasetPart2:
         return np.mean(n_scores)
 
     
-    @classmethod
-    def constructFromFile(cls,filePath):
-        df = pd.read_csv(filePath,header=None)
-        df.columns = [f"f_{i}" for i in range(len(df.columns))]
-        df.rename(columns = {f'f_{len(df.columns)-1}':'class'}, inplace = True)
-        return cls(df) 
+ 
 
-    def __init__(self,df):
+    def __init__(self,df:pd.DataFrame):
         self.df=df
         self.x = self.df.iloc[:,:-1]
         self.y = self.df.iloc[:,-1]
         self.M = self.df.shape[0]  # number of rows
         # for avoiding FS bias
-        self.df_fs = self.df.sample(frac=0.7, random_state=1)
+        self.df_fs = df.iloc[:int(0.7*self.M),:]
     
     def getDfWithSelectedFeatures(self, selectedFeatures:list):
         """For avoiding FS bias, df_fs is used instead of df to obtain the selected features"""
@@ -94,6 +89,13 @@ class DatasetPart2:
         # concat the class column
         returnedDf = pd.concat([returnedDf,self.df_fs.iloc[:,-1]],axis=1)
         return returnedDf
+    
+    @classmethod
+    def constructFromFile(cls,filePath):
+        df = pd.read_csv(filePath,header=None)
+        df.columns = [f"f_{i}" for i in range(len(df.columns))]
+        df.rename(columns = {f'f_{len(df.columns)-1}':'class'}, inplace = True)
+        return cls(df) 
     
     @staticmethod
     def getTransformedDf(df2Transform:pd.DataFrame):
@@ -111,7 +113,7 @@ class DatasetPart2:
         tempDf_x = tempDf.iloc[:,:-1]
         tempDf_y = tempDf.iloc[:,-1]
         # only transform the continous features, ignore Y
-        kbins = KBinsDiscretizer(n_bins=10, encode='ordinal', strategy='quantile')
+        kbins = KBinsDiscretizer(n_bins=10, encode='ordinal', strategy='uniform')
         tempDf_x = kbins.fit_transform(tempDf_x)
         tempDf = pd.concat([pd.DataFrame(tempDf_x),tempDf_y],axis=1)
         tempDf.columns = [f"f_{i}" for i in range(len(tempDf.columns))]
@@ -686,6 +688,11 @@ def run_5_times_with_different_seeds(ds:DatasetPart2,
                                   "list":five_computional_time_list
                                   }
     return five_acc_score_dict, five_computional_time_list
+
+# %%
+# ds_sonar  = Sonar.constructFromFile("./sonar/sonar.data")
+# ds_sonar.df_fs
+# # ds_sonar.M
 
 # %% [markdown]
 # run filterGA 5 times for sonar and wbcd
