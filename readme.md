@@ -21,18 +21,23 @@ then, rest of this readme.txt contains commands to run the *.py for each part, y
 
 
 Part 1: 
-    > cd p1 && python p1.py && cd ..
+    > cd p1 && python p1.py 
+    > cd ..
 
 Part 2: 
-    > cd p2 && python p2.py && cd ..
+    > cd p2 && python p2.py 
+    > cd ..
 
 Part 3: 
-    > cd p3 && python p3.py && cd ..
+    > cd p3 && python p3.py 
+    > cd ..
 
 Part 4: 
-    > cd p4 && python p4.py && cd ..
+    > cd p4 && python p4.py 
+    > cd ..
 
 Part 5: 
-    > cd p5 && python p5.py && cd ..
+    > cd p5 && python p5.py 
+    > cd ..
 
 

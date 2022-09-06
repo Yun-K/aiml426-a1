@@ -74,7 +74,7 @@ class Knapsack:
 # define some constants for the genetic algorithm
 CONSTANTS_DICT = {
     "POPULATION_SIZE": 100, # number of individuals in each population
-    "MAX_GENERATIONS": 250, # number of generations to run the algorithm
+    "MAX_GENERATIONS": 200, # number of generations to run the algorithm
     "CROSSOVER_RATE": 1.0, # crossover rate should always be 100%, based on slides
     "MUTATION_RATE": 0.2, # mutation rate
     "ELITIST_PERCENTAGE": 0.05, # percentage of the best individuals to keep in the next generation
