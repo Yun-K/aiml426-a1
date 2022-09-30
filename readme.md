@@ -1,3 +1,7 @@
+name: Yun Zhou
+id: 300442776
+
+
 I am using the python for this assignment, so program.zip and source.zip are actually the same.
 
 I use jupyter notebook for all parts, so you can clearly observe the results by opening the jupyter notebook. 
@@ -22,22 +26,27 @@ then, rest of this readme.txt contains commands to run the *.py for each part, y
 
 Part 1: 
     > cd p1 && python p1.py 
+    >
     > cd ..
 
 Part 2: 
     > cd p2 && python p2.py 
+    > 
     > cd ..
 
 Part 3: 
     > cd p3 && python p3.py 
+    >
     > cd ..
 
 Part 4: 
     > cd p4 && python p4.py 
+    >
     > cd ..
 
 Part 5: 
     > cd p5 && python p5.py 
+    >
     > cd ..
 
 
